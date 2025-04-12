@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { 
   Type, 
   PaintBucket, 
-  LineHeight, 
-  LetterSpacing, 
+  ArrowUpDown, // Replacement for LineHeight
+  MoveHorizontal, // Replacement for LetterSpacing
   EyeOff, 
   Play, 
   Pause, 
@@ -132,7 +132,7 @@ const DyslexiaToolbar: React.FC<DyslexiaToolbarProps> = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center space-x-2">
-              <LineHeight className="h-4 w-4" />
+              <ArrowUpDown className="h-4 w-4" />
               <div className="min-w-[140px]">
                 <Slider 
                   value={[settings.lineSpacing]} 
@@ -154,7 +154,7 @@ const DyslexiaToolbar: React.FC<DyslexiaToolbarProps> = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center space-x-2">
-              <LetterSpacing className="h-4 w-4" />
+              <MoveHorizontal className="h-4 w-4" />
               <div className="min-w-[140px]">
                 <Slider 
                   value={[settings.letterSpacing]} 
