@@ -6,6 +6,7 @@ import DyslexiaSettings from './DyslexiaSettings';
 import ReadingPanel from './ReadingPanel';
 import MockContent from './MockContent';
 import { textToSpeech } from '../utils/textToSpeech';
+import { Sparkles } from 'lucide-react';
 
 const DyslexiaExtension: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -43,9 +44,16 @@ const DyslexiaExtension: React.FC = () => {
   
   return (
     <DyslexiaProvider>
-      <div className="min-h-screen flex flex-col">
-        <header className="bg-background z-10 border-b sticky top-0">
-          <div className="container mx-auto py-2">
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-secondary/20">
+        <header className="bg-background/80 backdrop-blur-sm z-10 border-b sticky top-0 transition-all duration-300 shadow-sm">
+          <div className="container mx-auto py-3">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+                <h1 className="text-xl font-semibold">Read Easy</h1>
+              </div>
+              <p className="text-sm text-muted-foreground">Dyslexia-Friendly Browser Extension</p>
+            </div>
             <DyslexiaToolbar 
               onToggleSettings={handleToggleSettings}
               onToggleReadMode={handleToggleReadMode}
@@ -56,9 +64,15 @@ const DyslexiaExtension: React.FC = () => {
           </div>
         </header>
         
-        <main className="flex-1">
+        <main className="flex-1 container mx-auto py-6 px-4 animate-fade-in">
           <MockContent />
         </main>
+        
+        <footer className="border-t py-4 text-center text-sm text-muted-foreground bg-background/50">
+          <div className="container mx-auto">
+            Read Easy &copy; {new Date().getFullYear()} - Making the web accessible for everyone
+          </div>
+        </footer>
         
         <DyslexiaSettings 
           open={settingsOpen} 

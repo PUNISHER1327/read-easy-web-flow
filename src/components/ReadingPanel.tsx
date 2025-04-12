@@ -1,9 +1,13 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useDyslexiaSettings } from '../contexts/DyslexiaContext';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Play, Pause, SkipForward, RotateCcw, X, Sparkles } from 'lucide-react';
+import { Play, Pause, SkipForward, RotateCcw, X, Sparkles, VolumeX, Volume2 } from 'lucide-react';
 import { textToSpeech } from '../utils/textToSpeech';
+import { Slider } from './ui/slider';
+import { Badge } from './ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 interface ReadingPanelProps {
   visible: boolean;
@@ -12,13 +16,15 @@ interface ReadingPanelProps {
 }
 
 const ReadingPanel: React.FC<ReadingPanelProps> = ({ visible, onClose, contentToRead }) => {
-  const { settings } = useDyslexiaSettings();
+  const { settings, updateSettings } = useDyslexiaSettings();
   const [isReading, setIsReading] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const [simplifiedContent, setSimplifiedContent] = useState<string | null>(null);
   const [isSimplified, setIsSimplified] = useState(false);
   const [isSimplifying, setIsSimplifying] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
   
   const contentRef = useRef<HTMLDivElement>(null);
   const words = (isSimplified && simplifiedContent ? simplifiedContent : contentToRead).split(/\s+/);
@@ -143,96 +149,181 @@ const ReadingPanel: React.FC<ReadingPanelProps> = ({ visible, onClose, contentTo
       setTimeout(startReading, 100);
     }
   };
+
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    // In a real implementation, this would control the speech synthesis volume
+  };
+
+  const handleVolumeChange = (newVolume: number[]) => {
+    setVolume(newVolume[0]);
+    setIsMuted(newVolume[0] === 0);
+    // In a real implementation, this would control the speech synthesis volume
+  };
   
   if (!visible) return null;
   
   return (
-    <Card className="fixed bottom-4 right-4 w-[500px] max-w-[calc(100vw-2rem)] shadow-lg z-50">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-lg">Read Along Mode</CardTitle>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
-      </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {/* Reading Controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={isReading ? pauseReading : startReading}
-            >
-              {isReading && !isPaused ? (
-                <Pause className="h-4 w-4" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-            </Button>
+    <TooltipProvider>
+      <Card className="fixed bottom-4 right-4 w-[500px] max-w-[calc(100vw-2rem)] shadow-lg z-50 animate-scale-in">
+        <CardHeader className="flex flex-row items-center justify-between pb-2 bg-muted/30 rounded-t-lg">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Badge variant="outline" className="bg-primary/10 hover:bg-primary/20">
+              Read Along Mode
+            </Badge>
+          </CardTitle>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0 hover:bg-destructive/10">
+                <X className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Close read along mode</p>
+            </TooltipContent>
+          </Tooltip>
+        </CardHeader>
+        
+        <CardContent className="space-y-4 p-4">
+          {/* Reading Controls */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center space-x-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={isReading ? pauseReading : startReading}
+                    className="hover-scale"
+                  >
+                    {isReading && !isPaused ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isReading && !isPaused ? "Pause" : "Play"}</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={skipSentence}
+                    disabled={!isReading}
+                    className="hover-scale"
+                  >
+                    <SkipForward className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Skip ahead</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={stopReading}
+                    disabled={!isReading}
+                    className="hover-scale"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Restart</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline" 
+                    size="icon"
+                    onClick={toggleMute}
+                    className="hover-scale"
+                  >
+                    {isMuted ? (
+                      <VolumeX className="h-4 w-4" />
+                    ) : (
+                      <Volume2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isMuted ? "Unmute" : "Mute"}</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              <div className="w-24">
+                <Slider
+                  value={[volume]} 
+                  min={0} 
+                  max={1} 
+                  step={0.1}
+                  onValueChange={handleVolumeChange}
+                />
+              </div>
+            </div>
             
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={skipSentence}
-              disabled={!isReading}
-            >
-              <SkipForward className="h-4 w-4" />
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={stopReading}
-              disabled={!isReading}
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant={isSimplified ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={toggleSimplified}
+                  disabled={isSimplifying}
+                  className="flex items-center space-x-1 hover-scale"
+                >
+                  <Sparkles className="h-4 w-4 mr-1" />
+                  {isSimplifying ? 'Simplifying...' : isSimplified ? 'Original Text' : 'Simplify Text'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isSimplified ? "Show original text" : "Show simplified version"}</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleSimplified}
-            disabled={isSimplifying}
-            className="flex items-center space-x-1"
+          {/* Reading Content */}
+          <div 
+            className={`h-[300px] overflow-y-auto p-4 border rounded-md transition-colors duration-300 ${
+              isSimplified ? 'bg-primary/5' : 'bg-background'
+            }`}
+            style={{
+              lineHeight: `${settings.lineSpacing * 1.5}rem`,
+              letterSpacing: `${settings.letterSpacing * 0.02}rem`,
+            }}
+            ref={contentRef}
           >
-            <Sparkles className="h-4 w-4 mr-1" />
-            {isSimplifying ? 'Simplifying...' : isSimplified ? 'Original Text' : 'Simplify Text'}
-          </Button>
-        </div>
-        
-        {/* Reading Content */}
-        <div 
-          className={`h-[300px] overflow-y-auto p-4 border rounded-md ${
-            isSimplified ? 'bg-primary/5' : 'bg-background'
-          }`}
-          style={{
-            lineHeight: `${settings.lineSpacing * 1.5}rem`,
-            letterSpacing: `${settings.letterSpacing * 0.02}rem`,
-          }}
-          ref={contentRef}
-        >
-          <div className={`${settings.font === 'opendyslexic' ? 'font-opendyslexic' : ''}`}>
-            {words.map((word, index) => (
-              <span 
-                key={index}
-                className={`word ${index === currentWordIndex ? 'highlight-word' : ''}`}
-              >
-                {word}{' '}
-              </span>
-            ))}
+            <div className={`${settings.font === 'opendyslexic' ? 'font-opendyslexic' : ''}`}>
+              {words.map((word, index) => (
+                <span 
+                  key={index}
+                  className={`word ${index === currentWordIndex ? 'highlight-word' : ''}`}
+                >
+                  {word}{' '}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
-        
-        {isSimplified && (
-          <div className="text-xs text-muted-foreground italic">
-            Note: The text has been simplified for easier reading. This is a simulation of what an AI-powered
-            simplification feature would do in the full extension.
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          
+          {isSimplified && (
+            <div className="text-xs text-muted-foreground italic border-l-2 border-primary/20 pl-2 bg-muted/10 p-2 rounded">
+              <p className="font-medium text-sm mb-1">Simplified Text</p>
+              <p>This is a simulation of AI-powered text simplification that would be available in the full extension.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </TooltipProvider>
   );
 };
 
