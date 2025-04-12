@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -18,6 +19,10 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				'opendyslexic': ['OpenDyslexic', 'sans-serif'],
+				'dyslexie': ['Dyslexie', 'sans-serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -61,6 +66,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Custom colors for dyslexia-friendly backgrounds
+				'dyslexia': {
+					'cream': '#FFFEF0',
+					'beige': '#F5F5DC',
+					'soft-blue': '#E0F7FA',
+					'soft-green': '#E8F5E9',
+					'light-pink': '#FCE4EC',
 				}
 			},
 			borderRadius: {
