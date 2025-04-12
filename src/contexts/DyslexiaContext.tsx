@@ -40,7 +40,11 @@ const DyslexiaContext = createContext<DyslexiaContextType>({
 
 export const useDyslexiaSettings = () => useContext(DyslexiaContext);
 
-export const DyslexiaProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface DyslexiaProviderProps {
+  children: React.ReactNode;
+}
+
+export const DyslexiaProvider: React.FC<DyslexiaProviderProps> = ({ children }) => {
   const [settings, setSettings] = useState<DyslexiaSettings>(defaultSettings);
 
   // Load settings from localStorage on initial render
