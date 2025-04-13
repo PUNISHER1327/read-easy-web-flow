@@ -4,14 +4,18 @@ import { DyslexiaProvider } from '../contexts/DyslexiaContext';
 import DyslexiaToolbar from './DyslexiaToolbar';
 import DyslexiaSettings from './DyslexiaSettings';
 import ReadingPanel from './ReadingPanel';
+import VoiceRecorder from './VoiceRecorder';
 import MockContent from './MockContent';
 import { textToSpeech } from '../utils/textToSpeech';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Mic } from 'lucide-react';
+import { Button } from './ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 const DyslexiaExtension: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [readModeVisible, setReadModeVisible] = useState(false);
   const [isReading, setIsReading] = useState(false);
+  const [recorderOpen, setRecorderOpen] = useState(false);
   
   const handleToggleSettings = () => {
     setSettingsOpen(!settingsOpen);
@@ -41,6 +45,10 @@ const DyslexiaExtension: React.FC = () => {
       textToSpeech.pause();
     }
   };
+
+  const handleOpenRecorder = () => {
+    setRecorderOpen(true);
+  };
   
   return (
     <DyslexiaProvider>
@@ -52,7 +60,26 @@ const DyslexiaExtension: React.FC = () => {
                 <Sparkles className="h-5 w-5 text-primary animate-pulse" />
                 <h1 className="text-xl font-semibold">Read Easy</h1>
               </div>
-              <p className="text-sm text-muted-foreground">Dyslexia-Friendly Browser Extension</p>
+              <div className="flex items-center gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        onClick={handleOpenRecorder} 
+                        variant="outline" 
+                        size="icon"
+                        className="rounded-full"
+                      >
+                        <Mic className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Record voice notes</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <p className="text-sm text-muted-foreground">Dyslexia-Friendly Browser Extension</p>
+              </div>
             </div>
             <DyslexiaToolbar 
               onToggleSettings={handleToggleSettings}
@@ -97,6 +124,11 @@ const DyslexiaExtension: React.FC = () => {
             
             The brain changes and develops in remarkable ways during the early years of life. But these changes don't stop at childhood. The brain continues to develop and establish neural connections throughout life.
           `}
+        />
+        
+        <VoiceRecorder 
+          open={recorderOpen}
+          onOpenChange={setRecorderOpen}
         />
       </div>
     </DyslexiaProvider>
