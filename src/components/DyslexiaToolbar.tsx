@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { FontType, BackgroundType, useDyslexiaSettings } from '../contexts/DyslexiaContext';
 import { Button } from './ui/button';
@@ -15,7 +14,8 @@ import {
   Pause, 
   Settings,
   BookOpen,
-  MicIcon
+  MicIcon,
+  Square
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Separator } from './ui/separator';
@@ -29,6 +29,7 @@ interface DyslexiaToolbarProps {
   isReading: boolean;
   onStartReading: () => void;
   onPauseReading: () => void;
+  onStopReading: () => void;
 }
 
 const DyslexiaToolbar: React.FC<DyslexiaToolbarProps> = ({ 
@@ -36,13 +37,14 @@ const DyslexiaToolbar: React.FC<DyslexiaToolbarProps> = ({
   onToggleReadMode,
   isReading,
   onStartReading,
-  onPauseReading
+  onPauseReading,
+  onStopReading
 }) => {
   const { settings, updateSettings } = useDyslexiaSettings();
   const [voiceActivationEnabled, setVoiceActivationEnabled] = useState(false);
 
   useEffect(() => {
-    // Set up voice activation callback
+    // Set up voice activation callbacks
     voiceActivation.setActivationCallback(() => {
       toast({
         title: "Voice activation triggered!",
@@ -50,7 +52,15 @@ const DyslexiaToolbar: React.FC<DyslexiaToolbarProps> = ({
       });
       onStartReading();
     });
-  }, [onStartReading]);
+
+    voiceActivation.setStopCallback(() => {
+      toast({
+        title: "Voice stop command detected!",
+        description: "Stopping screen reader..."
+      });
+      onStopReading();
+    });
+  }, [onStartReading, onStopReading]);
 
   const fontOptions: { value: FontType; label: string }[] = [
     { value: 'default', label: 'Default' },
@@ -74,7 +84,7 @@ const DyslexiaToolbar: React.FC<DyslexiaToolbarProps> = ({
         setVoiceActivationEnabled(true);
         toast({
           title: "Voice activation enabled",
-          description: "Say 'Hey Discover' to start reading"
+          description: "Say 'Hey Discover' to start reading or 'Stop Discover' to stop"
         });
       } else {
         toast({
@@ -248,7 +258,7 @@ const DyslexiaToolbar: React.FC<DyslexiaToolbarProps> = ({
               </div>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Voice activation ("Hey Discover")</p>
+              <p>Voice activation ("Hey Discover" / "Stop Discover")</p>
             </TooltipContent>
           </Tooltip>
         )}
@@ -270,26 +280,44 @@ const DyslexiaToolbar: React.FC<DyslexiaToolbarProps> = ({
           </TooltipContent>
         </Tooltip>
 
-        {/* Play/Pause Button */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={isReading ? onPauseReading : onStartReading}
-              disabled={!settings.enabled}
-            >
-              {isReading ? (
-                <Pause className="h-4 w-4" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{isReading ? "Pause reading" : "Start reading"}</p>
-          </TooltipContent>
-        </Tooltip>
+        {/* Play/Pause/Stop Controls */}
+        <div className="flex items-center space-x-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={isReading ? onPauseReading : onStartReading}
+                disabled={!settings.enabled}
+              >
+                {isReading ? (
+                  <Pause className="h-4 w-4" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{isReading ? "Pause reading" : "Start reading"}</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onStopReading}
+                disabled={!settings.enabled || !isReading}
+              >
+                <Square className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Stop reading</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
 
         {/* Settings Button */}
         <Tooltip>

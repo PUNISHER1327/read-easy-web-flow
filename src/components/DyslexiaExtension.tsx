@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { DyslexiaProvider, useDyslexiaSettings } from '../contexts/DyslexiaContext';
 import DyslexiaToolbar from './DyslexiaToolbar';
@@ -7,9 +6,11 @@ import ReadingPanel from './ReadingPanel';
 import VoiceRecorder from './VoiceRecorder';
 import MockContent from './MockContent';
 import { textToSpeech } from '../utils/textToSpeech';
+import { voiceActivation } from '../utils/voiceActivation';
 import { Sparkles, Mic } from 'lucide-react';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { toast } from './ui/use-toast';
 
 const DyslexiaExtensionContent: React.FC = () => {
   const { settings } = useDyslexiaSettings();
@@ -17,6 +18,25 @@ const DyslexiaExtensionContent: React.FC = () => {
   const [readModeVisible, setReadModeVisible] = useState(false);
   const [isReading, setIsReading] = useState(false);
   const [recorderOpen, setRecorderOpen] = useState(false);
+  
+  // Setup voice activation callbacks
+  React.useEffect(() => {
+    voiceActivation.setActivationCallback(() => {
+      toast({
+        title: "Voice activation triggered!",
+        description: "Starting screen reader..."
+      });
+      handleStartReading();
+    });
+
+    voiceActivation.setStopCallback(() => {
+      toast({
+        title: "Voice stop command detected!",
+        description: "Stopping screen reader..."
+      });
+      handleStopReading();
+    });
+  }, []);
   
   const handleToggleSettings = () => {
     setSettingsOpen(!settingsOpen);
@@ -34,6 +54,11 @@ const DyslexiaExtensionContent: React.FC = () => {
     const content = document.querySelector('main')?.textContent || '';
     textToSpeech.speak(content);
     setIsReading(true);
+  };
+  
+  const handleStopReading = () => {
+    textToSpeech.stop();
+    setIsReading(false);
   };
   
   const handlePauseReading = () => {
@@ -128,6 +153,7 @@ const DyslexiaExtensionContent: React.FC = () => {
             isReading={isReading}
             onStartReading={handleStartReading}
             onPauseReading={handlePauseReading}
+            onStopReading={handleStopReading}
           />
         </div>
       </header>

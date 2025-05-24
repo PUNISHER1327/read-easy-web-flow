@@ -1,9 +1,12 @@
+
 class VoiceActivationService {
   private recognition: SpeechRecognition | null = null;
   private isListening: boolean = false;
   private isEnabled: boolean = false;
   private onActivated: (() => void) | null = null;
+  private onStopped: (() => void) | null = null;
   private triggerPhrase: string = 'hey discover';
+  private stopPhrase: string = 'stop discover';
 
   constructor() {
     // Check for browser compatibility
@@ -32,6 +35,11 @@ class VoiceActivationService {
         if (this.onActivated) {
           this.onActivated();
         }
+      } else if (transcript.includes(this.stopPhrase)) {
+        console.log('Stop phrase detected!');
+        if (this.onStopped) {
+          this.onStopped();
+        }
       }
     };
 
@@ -59,6 +67,10 @@ class VoiceActivationService {
     this.onActivated = callback;
   }
 
+  setStopCallback(callback: () => void) {
+    this.onStopped = callback;
+  }
+
   async startListening(): Promise<boolean> {
     if (!this.recognition) {
       console.warn('Speech recognition not supported');
@@ -72,7 +84,7 @@ class VoiceActivationService {
       this.isEnabled = true;
       this.isListening = true;
       this.recognition.start();
-      console.log('Voice activation started - listening for "Hey Discover"');
+      console.log('Voice activation started - listening for "Hey Discover" and "Stop Discover"');
       return true;
     } catch (error) {
       console.error('Failed to start voice activation:', error);
