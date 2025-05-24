@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 300px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1f2937;
+    }
+    
+    .description {
+      color: #6b7280;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .btn {
+      padding: 10px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #ffffff;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    
+    .btn:hover {
+      background: #f3f4f6;
+      border-color: #9ca3af;
+    }
+    
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+    
+    .footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      color: #6b7280;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span style="font-size: 20px;">✨</span>
+    <div class="title">Read Easy</div>
+  </div>
+  
+  <div class="description">
+    Dyslexia-friendly browser extension that makes web content more accessible with voice commands and visual enhancements.
+  </div>
+  
+  <div class="controls">
+    <button class="btn btn-primary" id="activateBtn">Activate Extension</button>
+    <button class="btn" id="settingsBtn">Open Settings</button>
+    <button class="btn" id="helpBtn">Help & Tips</button>
+  </div>
+  
+  <div class="footer">
+    Say "Hey Discover" to start reading<br>
+    Say "Stop Discover" to stop reading
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
