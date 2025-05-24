@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontType, BackgroundType, useDyslexiaSettings } from '../contexts/DyslexiaContext';
 import { Button } from './ui/button';
 import { Slider } from './ui/slider';
@@ -8,17 +8,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { 
   Type, 
   PaintBucket, 
-  ArrowUpDown, // Replacement for LineHeight
-  MoveHorizontal, // Replacement for LetterSpacing
+  ArrowUpDown,
+  MoveHorizontal,
   EyeOff, 
   Play, 
   Pause, 
   Settings,
-  BookOpen
+  BookOpen,
+  MicIcon
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Separator } from './ui/separator';
 import { textToSpeech } from '../utils/textToSpeech';
+import { voiceActivation } from '../utils/voiceActivation';
+import { toast } from './ui/use-toast';
 
 interface DyslexiaToolbarProps {
   onToggleSettings: () => void;
@@ -36,6 +39,18 @@ const DyslexiaToolbar: React.FC<DyslexiaToolbarProps> = ({
   onPauseReading
 }) => {
   const { settings, updateSettings } = useDyslexiaSettings();
+  const [voiceActivationEnabled, setVoiceActivationEnabled] = useState(false);
+
+  useEffect(() => {
+    // Set up voice activation callback
+    voiceActivation.setActivationCallback(() => {
+      toast({
+        title: "Voice activation triggered!",
+        description: "Starting screen reader..."
+      });
+      onStartReading();
+    });
+  }, [onStartReading]);
 
   const fontOptions: { value: FontType; label: string }[] = [
     { value: 'default', label: 'Default' },
@@ -45,12 +60,38 @@ const DyslexiaToolbar: React.FC<DyslexiaToolbarProps> = ({
 
   const backgroundOptions: { value: BackgroundType; label: string; color: string }[] = [
     { value: 'default', label: 'Default', color: 'bg-background' },
-    { value: 'cream', label: 'Cream', color: 'bg-dyslexia-cream' },
-    { value: 'beige', label: 'Beige', color: 'bg-dyslexia-beige' },
-    { value: 'soft-blue', label: 'Soft Blue', color: 'bg-dyslexia-soft-blue' },
-    { value: 'soft-green', label: 'Soft Green', color: 'bg-dyslexia-soft-green' },
-    { value: 'light-pink', label: 'Light Pink', color: 'bg-dyslexia-light-pink' },
+    { value: 'cream', label: 'Cream', color: 'bg-yellow-50' },
+    { value: 'beige', label: 'Beige', color: 'bg-amber-50' },
+    { value: 'soft-blue', label: 'Soft Blue', color: 'bg-blue-50' },
+    { value: 'soft-green', label: 'Soft Green', color: 'bg-green-50' },
+    { value: 'light-pink', label: 'Light Pink', color: 'bg-pink-50' },
   ];
+
+  const handleVoiceActivationToggle = async (enabled: boolean) => {
+    if (enabled) {
+      const success = await voiceActivation.startListening();
+      if (success) {
+        setVoiceActivationEnabled(true);
+        toast({
+          title: "Voice activation enabled",
+          description: "Say 'Hey Discover' to start reading"
+        });
+      } else {
+        toast({
+          title: "Voice activation failed",
+          description: "Please check microphone permissions",
+          variant: "destructive"
+        });
+      }
+    } else {
+      voiceActivation.stopListening();
+      setVoiceActivationEnabled(false);
+      toast({
+        title: "Voice activation disabled",
+        description: "Voice commands are now off"
+      });
+    }
+  };
 
   return (
     <div className="bg-background p-4 rounded-lg shadow-md border border-border flex items-center space-x-4 overflow-x-auto">
@@ -191,6 +232,26 @@ const DyslexiaToolbar: React.FC<DyslexiaToolbarProps> = ({
         </Tooltip>
 
         <Separator orientation="vertical" className="h-8" />
+
+        {/* Voice Activation */}
+        {voiceActivation.isSupported() && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center space-x-2">
+                <MicIcon className={`h-4 w-4 ${voiceActivationEnabled ? 'text-green-500' : ''}`} />
+                <Switch 
+                  checked={voiceActivationEnabled} 
+                  onCheckedChange={handleVoiceActivationToggle}
+                  disabled={!settings.enabled}
+                  id="voice-activation-toggle"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Voice activation ("Hey Discover")</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         {/* Read Mode Toggle */}
         <Tooltip>
