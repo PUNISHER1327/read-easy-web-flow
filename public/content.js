@@ -1,9 +1,11 @@
-
 // Enhanced content script for Read Easy extension with all accessibility features
 let isExtensionActive = false;
 let currentUtterance = null;
 let recognition = null;
 let dyslexiaToolbar = null;
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
 let settings = {
   enabled: false,
   font: 'default',
@@ -25,18 +27,87 @@ function initializeSpeechRecognition() {
 
     recognition.onresult = function(event) {
       const command = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-      console.log('Voice command:', command);
+      console.log('Voice command detected:', command);
       
       if (command.includes('hey discover') || command.includes('start reading')) {
+        console.log('Starting reading via voice command');
         startReading();
       } else if (command.includes('stop discover') || command.includes('stop reading')) {
+        console.log('Stopping reading via voice command');
         stopReading();
       }
     };
 
     recognition.onerror = function(event) {
       console.log('Speech recognition error:', event.error);
+      if (event.error === 'not-allowed') {
+        showNotification('Microphone access denied. Please allow microphone access for voice commands.');
+      }
     };
+
+    recognition.onend = function() {
+      // Auto-restart recognition if it was enabled
+      const voiceButton = document.getElementById('toggle-voice');
+      if (voiceButton && voiceButton.textContent === 'Disable Voice Commands') {
+        setTimeout(() => {
+          try {
+            recognition.start();
+          } catch (e) {
+            console.log('Recognition restart failed:', e);
+          }
+        }, 1000);
+      }
+    };
+  }
+}
+
+// Audio recording functions
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        audioChunks.push(event.data);
+      }
+    };
+    
+    mediaRecorder.onstop = () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      // Create download link
+      const a = document.createElement('a');
+      a.href = audioUrl;
+      a.download = `voice-recording-${Date.now()}.wav`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      // Cleanup
+      stream.getTracks().forEach(track => track.stop());
+      URL.revokeObjectURL(audioUrl);
+      
+      showNotification('Recording saved to downloads');
+    };
+    
+    mediaRecorder.start();
+    isRecording = true;
+    showNotification('Recording started');
+    
+  } catch (error) {
+    console.error('Recording failed:', error);
+    showNotification('Recording failed: ' + error.message);
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && isRecording) {
+    mediaRecorder.stop();
+    isRecording = false;
+    showNotification('Recording stopped');
   }
 }
 
@@ -247,8 +318,8 @@ function createDyslexiaToolbar() {
       position: fixed;
       top: 10px;
       right: 10px;
-      background: #2563eb;
-      color: white;
+      background: #ffffff;
+      color: #1f2937;
       padding: 15px;
       border-radius: 10px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -257,13 +328,14 @@ function createDyslexiaToolbar() {
       min-width: 320px;
       max-height: 80vh;
       overflow-y: auto;
+      border: 1px solid #e5e7eb;
     ">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h3 style="margin: 0; font-size: 16px;">Read Easy - Full Settings</h3>
+        <h3 style="margin: 0; font-size: 16px; color: #1f2937;">Read Easy - Full Settings</h3>
         <button id="close-toolbar" style="
           background: none;
           border: none;
-          color: white;
+          color: #6b7280;
           font-size: 18px;
           cursor: pointer;
         ">×</button>
@@ -278,8 +350,8 @@ function createDyslexiaToolbar() {
       </div>
       
       <!-- Reading Controls -->
-      <div style="margin-bottom: 15px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
-        <h4 style="margin: 0 0 8px 0; font-size: 14px;">Reading Controls</h4>
+      <div style="margin-bottom: 15px; border-top: 1px solid #e5e7eb; padding-top: 10px;">
+        <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #1f2937;">Reading Controls</h4>
         <div style="display: flex; gap: 5px; margin-bottom: 10px;">
           <button id="start-reading" style="
             background: #16a34a;
@@ -313,20 +385,49 @@ function createDyslexiaToolbar() {
         </div>
         
         <div style="margin-bottom: 8px;">
-          <label style="display: block; margin-bottom: 4px; font-size: 12px;">Speech Rate: <span id="speech-rate-value">1.0</span>x</label>
+          <label style="display: block; margin-bottom: 4px; font-size: 12px; color: #1f2937;">Speech Rate: <span id="speech-rate-value">1.0</span>x</label>
           <input type="range" id="speech-rate" min="0.5" max="2" step="0.1" value="1.0" style="width: 100%;">
         </div>
       </div>
       
+      <!-- Recording Controls -->
+      <div style="margin-bottom: 15px; border-top: 1px solid #e5e7eb; padding-top: 10px;">
+        <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #1f2937;">Voice Recording</h4>
+        <div style="display: flex; gap: 5px;">
+          <button id="start-recording" style="
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+          ">🎤 Record</button>
+          
+          <button id="stop-recording" style="
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: none;
+          ">⏹ Stop & Save</button>
+        </div>
+      </div>
+      
       <!-- Font Settings -->
-      <div style="margin-bottom: 15px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
-        <h4 style="margin: 0 0 8px 0; font-size: 14px;">Font Settings</h4>
+      <div style="margin-bottom: 15px; border-top: 1px solid #e5e7eb; padding-top: 10px;">
+        <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #1f2937;">Font Settings</h4>
         <select id="font-select" style="
           width: 100%;
           padding: 6px;
-          border: none;
+          border: 1px solid #d1d5db;
           border-radius: 4px;
           margin-bottom: 8px;
+          background: white;
+          color: #1f2937;
         ">
           <option value="default">Default</option>
           <option value="opendyslexic">OpenDyslexic</option>
@@ -336,12 +437,14 @@ function createDyslexiaToolbar() {
       
       <!-- Background Color -->
       <div style="margin-bottom: 15px;">
-        <h4 style="margin: 0 0 8px 0; font-size: 14px;">Background Color</h4>
+        <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #1f2937;">Background Color</h4>
         <select id="background-select" style="
           width: 100%;
           padding: 6px;
-          border: none;
+          border: 1px solid #d1d5db;
           border-radius: 4px;
+          background: white;
+          color: #1f2937;
         ">
           <option value="default">Default</option>
           <option value="cream">Cream</option>
@@ -353,32 +456,32 @@ function createDyslexiaToolbar() {
       </div>
       
       <!-- Spacing Controls -->
-      <div style="margin-bottom: 15px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
-        <h4 style="margin: 0 0 8px 0; font-size: 14px;">Spacing Controls</h4>
+      <div style="margin-bottom: 15px; border-top: 1px solid #e5e7eb; padding-top: 10px;">
+        <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #1f2937;">Spacing Controls</h4>
         
         <div style="margin-bottom: 8px;">
-          <label style="display: block; margin-bottom: 4px; font-size: 12px;">Line Spacing: <span id="line-spacing-value">1.5</span>x</label>
+          <label style="display: block; margin-bottom: 4px; font-size: 12px; color: #1f2937;">Line Spacing: <span id="line-spacing-value">1.5</span>x</label>
           <input type="range" id="line-spacing" min="1" max="3" step="0.1" value="1.5" style="width: 100%;">
         </div>
         
         <div style="margin-bottom: 8px;">
-          <label style="display: block; margin-bottom: 4px; font-size: 12px;">Letter Spacing: <span id="letter-spacing-value">1</span></label>
+          <label style="display: block; margin-bottom: 4px; font-size: 12px; color: #1f2937;">Letter Spacing: <span id="letter-spacing-value">1</span></label>
           <input type="range" id="letter-spacing" min="0" max="5" step="0.5" value="1" style="width: 100%;">
         </div>
       </div>
       
       <!-- Visual Settings -->
-      <div style="margin-bottom: 15px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
-        <h4 style="margin: 0 0 8px 0; font-size: 14px;">Visual Settings</h4>
+      <div style="margin-bottom: 15px; border-top: 1px solid #e5e7eb; padding-top: 10px;">
+        <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #1f2937;">Visual Settings</h4>
         <label style="display: flex; align-items: center; cursor: pointer;">
           <input type="checkbox" id="reduce-noise" style="margin-right: 8px;">
-          <span style="font-size: 12px;">Reduce Visual Noise</span>
+          <span style="font-size: 12px; color: #1f2937;">Reduce Visual Noise</span>
         </label>
       </div>
       
       <!-- Voice Commands -->
-      <div style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
-        <h4 style="margin: 0 0 8px 0; font-size: 14px;">Voice Commands</h4>
+      <div style="border-top: 1px solid #e5e7eb; padding-top: 10px;">
+        <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #1f2937;">Voice Commands</h4>
         <button id="toggle-voice" style="
           background: #7c3aed;
           color: white;
@@ -389,7 +492,7 @@ function createDyslexiaToolbar() {
           width: 100%;
           margin-bottom: 8px;
         ">Enable Voice Commands</button>
-        <p style="font-size: 10px; margin: 0; opacity: 0.8;">Say "Hey Discover" to start or "Stop Discover" to stop reading</p>
+        <p style="font-size: 10px; margin: 0; opacity: 0.8; color: #6b7280;">Say "Hey Discover" to start or "Stop Discover" to stop reading</p>
       </div>
     </div>
   `;
@@ -447,6 +550,19 @@ function setupToolbarEventListeners() {
   document.getElementById('start-reading').onclick = startReading;
   document.getElementById('pause-reading').onclick = pauseReading;
   document.getElementById('stop-reading').onclick = stopReading;
+  
+  // Recording controls
+  document.getElementById('start-recording').onclick = function() {
+    startRecording();
+    document.getElementById('start-recording').style.display = 'none';
+    document.getElementById('stop-recording').style.display = 'inline-block';
+  };
+  
+  document.getElementById('stop-recording').onclick = function() {
+    stopRecording();
+    document.getElementById('start-recording').style.display = 'inline-block';
+    document.getElementById('stop-recording').style.display = 'none';
+  };
   
   // Speech rate
   document.getElementById('speech-rate').oninput = function(e) {
@@ -520,17 +636,24 @@ function hideDyslexiaToolbar() {
 function toggleVoiceCommands() {
   const button = document.getElementById('toggle-voice');
   
-  if (recognition && recognition.state === 'active') {
+  if (recognition && button.textContent === 'Disable Voice Commands') {
     recognition.stop();
     button.textContent = 'Enable Voice Commands';
     button.style.background = '#7c3aed';
     showNotification('Voice commands disabled');
   } else {
     if (recognition) {
-      recognition.start();
-      button.textContent = 'Disable Voice Commands';
-      button.style.background = '#16a34a';
-      showNotification('Voice commands enabled');
+      try {
+        recognition.start();
+        button.textContent = 'Disable Voice Commands';
+        button.style.background = '#16a34a';
+        showNotification('Voice commands enabled - say "Hey Discover" to start reading');
+      } catch (error) {
+        console.error('Voice recognition start failed:', error);
+        showNotification('Voice commands failed to start. Check microphone permissions.');
+      }
+    } else {
+      showNotification('Voice recognition not supported in this browser');
     }
   }
 }
