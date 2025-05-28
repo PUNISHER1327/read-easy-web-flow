@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <style>
     body {
-      width: 300px;
+      width: 320px;
       padding: 20px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 14px;
@@ -32,6 +32,30 @@
       line-height: 1.5;
     }
     
+    .feature-list {
+      background: #f8fafc;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 20px;
+      font-size: 12px;
+    }
+    
+    .feature-list h4 {
+      margin: 0 0 8px 0;
+      color: #1f2937;
+      font-weight: 600;
+    }
+    
+    .feature-list ul {
+      margin: 0;
+      padding-left: 16px;
+      color: #4b5563;
+    }
+    
+    .feature-list li {
+      margin-bottom: 3px;
+    }
+    
     .controls {
       display: flex;
       flex-direction: column;
@@ -39,7 +63,7 @@
     }
     
     .btn {
-      padding: 10px 16px;
+      padding: 12px 16px;
       border: 1px solid #d1d5db;
       border-radius: 6px;
       background: #ffffff;
@@ -71,29 +95,63 @@
       border-top: 1px solid #e5e7eb;
       text-align: center;
       color: #6b7280;
+      font-size: 11px;
+    }
+    
+    .status {
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-bottom: 16px;
       font-size: 12px;
+      text-align: center;
+    }
+    
+    .status-info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
     }
   </style>
 </head>
 <body>
   <div class="header">
     <span style="font-size: 20px;">✨</span>
-    <div class="title">Read Easy</div>
+    <div class="title">Read Easy Complete</div>
   </div>
   
   <div class="description">
-    Dyslexia-friendly browser extension that makes web content more accessible with voice commands and visual enhancements.
+    Full-featured dyslexia-friendly browser extension with comprehensive accessibility tools and customization options.
+  </div>
+  
+  <div class="feature-list">
+    <h4>Complete Features Included:</h4>
+    <ul>
+      <li>OpenDyslexic & Dyslexie fonts</li>
+      <li>Background color options</li>
+      <li>Line & letter spacing controls</li>
+      <li>Text-to-speech with speed control</li>
+      <li>Voice activation commands</li>
+      <li>Visual noise reduction</li>
+      <li>Reading pause/resume controls</li>
+      <li>Persistent settings storage</li>
+    </ul>
+  </div>
+  
+  <div class="status status-info">
+    🎯 All React demo features now available in extension!
   </div>
   
   <div class="controls">
-    <button class="btn btn-primary" id="activateBtn">Activate Extension</button>
-    <button class="btn" id="settingsBtn">Open Settings</button>
-    <button class="btn" id="helpBtn">Help & Tips</button>
+    <button class="btn btn-primary" id="activateBtn">Open Full Accessibility Panel</button>
+    <button class="btn" id="settingsBtn">Extension Documentation</button>
+    <button class="btn" id="helpBtn">Help & Voice Commands</button>
   </div>
   
   <div class="footer">
-    Say "Hey Discover" to start reading<br>
-    Say "Stop Discover" to stop reading
+    <strong>Voice Commands:</strong><br>
+    "Hey Discover" → Start reading<br>
+    "Stop Discover" → Stop reading<br><br>
+    <em>Complete parity with React demo functionality</em>
   </div>
 
   <script src="popup.js"></script>
