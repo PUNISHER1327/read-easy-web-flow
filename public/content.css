@@ -1,9 +1,5 @@
 
-/* Enhanced content styles for Read Easy extension */
-
-/* Import OpenDyslexic font */
-@import url('https://fonts.googleapis.com/css2?family=OpenDyslexic:wght@400;700&display=swap');
-
+/* Content styles for Read Easy extension */
 #read-easy-extension {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
@@ -11,45 +7,4 @@
 /* Ensure extension doesn't interfere with page styles */
 #read-easy-extension * {
   box-sizing: border-box !important;
-}
-
-/* OpenDyslexic font family definition */
-.font-opendyslexic {
-  font-family: 'OpenDyslexic', monospace !important;
-}
-
-/* Dyslexie font family definition (fallback to serif) */
-.font-dyslexie {
-  font-family: 'Dyslexie', serif !important;
-}
-
-/* Toolbar specific styles */
-#read-easy-toolbar {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-}
-
-#read-easy-toolbar * {
-  box-sizing: border-box !important;
-}
-
-/* Ensure toolbar elements don't inherit page styles */
-#read-easy-toolbar input,
-#read-easy-toolbar select,
-#read-easy-toolbar button {
-  font-family: inherit !important;
-}
-
-/* Accessibility enhancements */
-.read-easy-highlight {
-  background-color: #fef3c7 !important;
-  border-radius: 2px !important;
-  padding: 1px 2px !important;
-}
-
-/* Focus indicators for better accessibility */
-#read-easy-toolbar button:focus,
-#read-easy-toolbar input:focus,
-#read-easy-toolbar select:focus {
-  outline: 2px solid #3b82f6 !important;
-  outline-offset: 2px !important;
 }
